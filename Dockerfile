@@ -1,20 +1,20 @@
-FROM ubuntu:12.04
+# Wordpress App
+FROM wordpress:4.9.1-php7.2-apache
+ADD ./src /var/www/html
 
-# Install dependencies
-RUN apt-get update -y
-RUN apt-get install -y git curl apache2 php5 libapache2-mod-php5 php5-mcrypt php5-mysql
+# Install the AWS CLI
+#RUN apt-get update && \
+#    apt-get -y install python curl unzip && cd /tmp && \
+#    curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" \
+#    -o "awscli-bundle.zip" && \
+#    unzip awscli-bundle.zip && \
+#    ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws && \
+#    rm awscli-bundle.zip && rm -rf awscli-bundle
 
-# Install app
-RUN rm -rf /var/www/*
-ADD src /var/www
+# Install the new entry-point script
+COPY secrets-entrypoint.sh /secrets-entrypoint.sh
+RUN chmod +x /secrets-entrypoint.sh
 
-# Configure apache
-RUN a2enmod rewrite
-RUN chown -R www-data:www-data /var/www
-ENV APACHE_RUN_USER www-data
-ENV APACHE_RUN_GROUP www-data
-ENV APACHE_LOG_DIR /var/log/apache2
-
-EXPOSE 80
-
-CMD ["/usr/sbin/apache2", "-D",  "FOREGROUND"]
+# # Overwrite the entry-point script
+ENTRYPOINT ["/secrets-entrypoint.sh"]
+CMD ["apache2-foreground"]
